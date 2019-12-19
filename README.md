@@ -1,5 +1,10 @@
 # gRPC-net-core
+
 sample gRPC implementation for .net core and python
+
+## Disclaimer
+
+You can find the original repo [here](https://github.com/psauthor/meterreader). This is the follow along implementation for [this](https://app.pluralsight.com/library/courses/aspnet-core-grpc/table-of-contents) Pluralsight course.
 
 ## Setup
 
