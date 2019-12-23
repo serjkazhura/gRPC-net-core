@@ -1,0 +1,34 @@
+import grpc
+
+from google.protobuf.timestamp_pb2 import Timestamp
+
+import enums_pb2 as Enums
+import MeterReader_pb2 as MeterReader
+import MeterReader_pb2_grpc as MeterReaderService
+
+def main():
+    print("callign gRPC client")
+
+    with open("localhost.crt", "rb") as file:
+        cert = file.read()
+
+    credentials = grpc.ssl_channel_credentials(cert)
+
+    channel = grpc.insecure_channel("localhost:5001", credentials)
+    stub = MeterReaderService.MeterReadingServiceStub(channel)
+
+    request = MeterReader.ReadingPacket(successful = Enums.ReadingStatus.SUCCESS)
+    now = Timestamp()
+    now.GetCurrentTime()
+    reading = MeterReader.ReadingMessage(customerId = 1, readingValue = 1, readingTime = now)
+    request.readings.append(reading)
+
+    stub.AddReading(request)
+
+    if (result.success == Enums.ReadingStatus.SUCCESS):
+        print("Success")
+    else:
+        print("failure")
+
+if (__name__ == "__main__"):
+    main()

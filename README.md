@@ -41,3 +41,9 @@ You could also watch changes to the Vue project by calling:
 ```
 C:/>npm run watch
 ```
+
+### Python Project Setup
+
+Navigate to the clients folder `cd meterreader\pythonclient`
+Install grpc `pip install grpcio` and then `pip install grpcio-tools`
+Run grpc tools via `python -m grpc.tools.protoc -I..\MeterReaderWeb\protos --python_out ./ --grpc_python_out ./ ../MeterReaderWeb/protos/MeterReader.proto ../MeterReaderWeb/protos/enums.proto`
