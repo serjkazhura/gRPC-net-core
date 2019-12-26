@@ -32,10 +32,25 @@ namespace MeterReaderClient {
     }
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
+      var counter = 0;
+      var customerId = _config.GetValue<int>("Service:CustomerId");
+      var delay = _config.GetValue<int>("Service:DelayInterval");
+
       while (!stoppingToken.IsCancellationRequested) {
         _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-        var customerId = _config.GetValue<int>("Service:CustomerId");
+        counter++;
+
+        if (counter % 10 == 0) {
+          Console.WriteLine("Sending Diagnostics");
+          var stream = _client.Value.SendDiagnostics();
+          for (int i = 0; i < 5; i++) {
+            var reading = await _readingFactory.GenerateAsync(customerId);
+            await stream.RequestStream.WriteAsync(reading);
+          }
+
+          await stream.RequestStream.CompleteAsync();
+        }
 
         var pkt = new ReadingPacket() {
           Successful = ReadingStatus.Success,
@@ -54,7 +69,7 @@ namespace MeterReaderClient {
           _logger.LogInformation("Failed to Send");
         }
 
-        await Task.Delay(_config.GetValue<int>("Service:DelayInterval"), stoppingToken);
+        await Task.Delay(delay, stoppingToken);
       }
     }
   }
