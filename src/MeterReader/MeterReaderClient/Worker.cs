@@ -15,19 +15,28 @@ namespace MeterReaderClient {
     private readonly IReadingFactory _readingFactory;
     private readonly IConfiguration _config;
     private readonly ILogger<Worker> _logger;
+    private readonly ILoggerFactory _loggerFactory;
 
     private readonly Lazy<MeterReadingService.MeterReadingServiceClient> _client;
 
-    public Worker(IReadingFactory readingFactory, IConfiguration config, ILogger<Worker> logger) {
+    public Worker(
+      IReadingFactory readingFactory, 
+      IConfiguration config, 
+      ILogger<Worker> logger,
+      ILoggerFactory loggerFactory
+    ) {
       _readingFactory = readingFactory;
       _config = config;
       _logger = logger;
-
+      _loggerFactory = loggerFactory;
       _client = new Lazy<MeterReadingService.MeterReadingServiceClient>(InitClient);
     }
 
     private MeterReadingService.MeterReadingServiceClient InitClient() {
-      var channel = GrpcChannel.ForAddress(_config["Service:ServerUrl"]);
+      var opts = new GrpcChannelOptions() {
+        LoggerFactory = _loggerFactory
+      };
+      var channel = GrpcChannel.ForAddress(_config["Service:ServerUrl"], opts);
       return new MeterReadingService.MeterReadingServiceClient(channel);
     }
     
