@@ -40,6 +40,7 @@ namespace MeterReaderWeb.Services {
       ReadingPacket request,
       ServerCallContext context
     ) {
+
       var result = new StatusMessage() {
         Succes = ReadingStatus.Failure
       };
@@ -47,6 +48,15 @@ namespace MeterReaderWeb.Services {
       if (request.Successful == ReadingStatus.Success) {
         try {
           foreach (var reading in request.Readings) {
+            if (reading.ReadingValue < 1000) {
+              _logger.LogDebug($"Reading Value below acceptable level (1000): {reading.ReadingValue}");
+              var trailer = new Metadata() {
+                { "BadValue", reading.ReadingValue.ToString() },
+                { "Field", "ReadingValue" },
+                { "Message", "Reading are Invalid" }
+              };
+              throw new RpcException(new Status(StatusCode.OutOfRange, "Value too low"));
+            }
             var r = new MeterReading() {
               Value = reading.ReadingValue,
               ReadingDate = reading.ReadingTime.ToDateTime(),
@@ -57,9 +67,12 @@ namespace MeterReaderWeb.Services {
           if (await _readingRepository.SaveAllAsync()) {
             result.Succes = ReadingStatus.Success;
           }
+        } catch (RpcException) {
+          throw;
         } catch (Exception ex) {
           result.Message = "Excption thrown";
           _logger.LogError($"Error thrown during AddReading {ex.Message}");
+          throw new RpcException(Status.DefaultCancelled, ex.Message);
         }
       }
 
